@@ -12,7 +12,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from subprocess import check_output
 from homeassistant.const import (CONF_ID)
 
 _LOGGER = logging.getLogger(__name__)

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.heyu/
 """
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
 
 import voluptuous as vol
 
