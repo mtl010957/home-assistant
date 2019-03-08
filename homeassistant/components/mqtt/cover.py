@@ -27,6 +27,8 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from _ast import Or
+from _operator import or_
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -224,6 +226,13 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
                 level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
+                if (int(payload) <= self._config.get(CONF_TILT_CLOSED_POSITION) and not \
+                        self._config.get(CONF_TILT_INVERT_STATE)) or \
+                        (int(payload) >= self._config.get(CONF_TILT_CLOSED_POSITION) and \
+                        self._config.get(CONF_TILT_INVERT_STATE)):
+                    self._state = True
+                else:
+                    self._state = False
                 self.async_schedule_update_ha_state()
 
         @callback
