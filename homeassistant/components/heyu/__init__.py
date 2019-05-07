@@ -5,13 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/heyu/
 """
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import check_output, STDOUT
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import (CONF_ID)
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +50,8 @@ class HeyuCtrl(object):
 
     @property
     def id(self):
-        """Return the id of this CM10 when multiple devices are configured for heyu."""
+        """Return the id of this CM10 when multiple devices are"""
+        """configured for heyu."""
         return self._id
 
     def x10_command(self, command):
@@ -64,13 +63,20 @@ class HeyuCtrl(object):
         if (self._id.__eq__('')):
             return check_output(['heyu'] + command.split(' '), stderr=STDOUT)
         else:
-            return check_output(['heyu', self._id] + command.split(' '), stderr=STDOUT)
+            return check_output(
+                ['heyu', self._id] + command.split(' '), stderr=STDOUT)
 
     def get_unit_status(self, code):
         """Get on/off status for given unit.
-        
+
         :param str code: The unit code to get status from.
         :rtype int
         """
-        output = check_output('heyu onstate ' + self._id + ' ' + code, shell=True)
-        return int(output.decode('utf-8')[0])
+        output = "0"
+        try:
+            output = check_output(
+                'heyu onstate ' + self._id + ' ' + code, shell=True)
+            return int(output.decode('utf-8')[0])
+        except Exception:
+            _LOGGER.exception("Heyu returned non-zero status, try again.")
+            return 0
