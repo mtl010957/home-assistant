@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
+import logging
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
@@ -14,6 +15,8 @@ from .const import DATA_AMCREST, DEVICES
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
+
+_LOGGER = logging.getLogger(__name__)
 
 PRIVACY_MODE_KEY = "privacy_mode"
 
@@ -63,6 +66,7 @@ class AmcrestSwitch(SwitchEntity):
         """Initialize switch."""
         self._api = device.api
         self.entity_description = entity_description
+        self._channel = device.channel
         self._attr_name = f"{name} {entity_description.name}"
 
     @property
@@ -86,6 +90,23 @@ class AmcrestSwitch(SwitchEntity):
         )
 
     async def async_update(self) -> None:
-        """Update switch."""
-        io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
-        self._attr_is_on = io_res == "true"
+        """Get the latest data and updates the state."""
+        if not self.available:
+            return
+        _LOGGER.debug("Updating %s switch", self.name)
+
+        switch_type = self.entity_description.key
+
+        try:        
+            """Set unique ID"""
+            if self._attr_unique_id is None and (
+                serial_number := (await self._api.async_serial_number)
+            ):
+                self._attr_unique_id = f"{serial_number}-{switch_type}-{self._channel}"
+
+            """Update switch."""
+            io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
+            self._attr_is_on = io_res == "true"
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "update", self.name, "sensor", error)
+
